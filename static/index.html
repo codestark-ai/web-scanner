@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛡️ Advanced Security Header Evaluator</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #3b82f6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #facc15;
+      --muted: #94a3b8;
+      --critical: #dc2626;
+      --authentication: #8b5cf6;
+      --server-config: #06b6d4;
+      --information: #f59e0b;
+      --application: #10b981;
+      --client: #ef4444;
+      --transport: #84cc16;
+    }
+    body {
+      background: var(--bg);
+      color: #f8fafc;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 30px;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 30px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 20px auto;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0b1220;
+      color: #fff;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 16px;
+      transition: background 0.3s;
+    }
+    button:hover { background: #2563eb; }
+    .header-item {
+      padding: 10px;
+      margin-bottom: 8px;
+      border-left: 4px solid transparent;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+    }
+    .present { border-left-color: var(--success); }
+    .missing { border-left-color: var(--danger); }
+    .warning { border-left-color: var(--warning); }
+    
+    .severity-critical { border-left-color: var(--critical); background: rgba(220,38,38,0.1); }
+    .severity-high { border-left-color: var(--danger); background: rgba(239,68,68,0.1); }
+    .severity-medium { border-left-color: var(--warning); background: rgba(250,204,21,0.1); }
+    .severity-low { border-left-color: var(--accent); background: rgba(59,130,246,0.1); }
+    .severity-info { border-left-color: var(--success); background: rgba(16,185,129,0.1); }
+    
+    .finding-item {
+      padding: 15px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border-left: 4px solid;
+      background: rgba(255,255,255,0.05);
+    }
+    
+    .area-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    
+    .host-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 8px;
+      background: #475569;
+      color: white;
+    }
+    
+    .component-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-right: 8px;
+      background: #7c3aed;
+      color: white;
+    }
+    
+    .area-authentication { background: var(--authentication); }
+    .area-server-config { background: var(--server-config); }
+    .area-information { background: var(--information); }
+    .area-application { background: var(--application); }
+    .area-client { background: var(--client); }
+    .area-transport { background: var(--transport); }
+    
+    .stats {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .stat-box {
+      background: var(--card);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+      min-width: 100px;
+      flex: 1;
+    }
+    
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .critical-count { color: var(--critical); }
+    .high-count { color: var(--danger); }
+    .medium-count { color: var(--warning); }
+    .low-count { color: var(--accent); }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      border-left: 4px solid var(--accent);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-btn {
+      background: #334155;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    
+    .filter-btn.active {
+      background: var(--accent);
+    }
+    
+    .recommendation {
+      background: rgba(255,255,255,0.05);
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+      font-size: 14px;
+      border-left: 3px solid var(--accent);
+    }
+    
+    .evidence {
+      background: rgba(255,255,255,0.03);
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 5px;
+      font-size: 12px;
+      font-family: monospace;
+      border-left: 2px solid var(--muted);
+    }
+    
+    .component-info {
+      background: rgba(124, 58, 237, 0.1);
+      padding: 8px;
+      border-radius: 4px;
+      margin-top: 5px;
+      font-size: 12px;
+      border-left: 2px solid #7c3aed;
+    }
+    
+    .area-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .area-card {
+      background: var(--card);
+      padding: 15px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    
+    .area-count {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .hosts-list {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    
+    .components-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .component-card {
+      background: var(--card);
+      padding: 15px;
+      border-radius: 8px;
+      border-left: 4px solid #7c3aed;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Advanced Vulnerability Scanner</h1>
+
+  <div class="card" style="max-width: 800px; margin: 0 auto;">
+    <label for="urlInput">Enter Website URL:</label>
+    <input id="urlInput" type="text" placeholder="https://example.com" />
+    <button onclick="scanURL()">🔍 Start Security Scan</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>🔐 Security Headers</h2>
+      <div id="headersResult">Enter a URL to begin scan.</div>
+    </div>
+
+    <div class="card">
+      <h2>🧱 CSP, Methods & Server Info</h2>
+      <div id="cspResult"></div>
+      <div id="methodResult"></div>
+      <div id="serverResult"></div>
+    </div>
+
+    <div class="card full-width">
+      <h2>📊 Vulnerability Assessment</h2>
+      <div id="scannedUrl" style="margin-bottom: 15px; padding: 10px; background: var(--card); border-radius: 8px;"></div>
+      <div class="stats" id="vulnStats"></div>
+      <div class="area-summary" id="areaSummary"></div>
+      <div class="components-grid" id="componentsGrid"></div>
+      <div class="filter-buttons" id="filterButtons"></div>
+      <div id="vulnerabilityFindings"></div>
+    </div>
+  </div>
+
+  <script>
+    const importantHeaders = [
+      "Strict-Transport-Security",
+      "Content-Security-Policy",
+      "X-Frame-Options",
+      "X-Content-Type-Options",
+      "Referrer-Policy",
+      "Permissions-Policy",
+      "Cross-Origin-Embedder-Policy",
+      "Cross-Origin-Opener-Policy",
+      "Cross-Origin-Resource-Policy"
+    ];
+
+    let currentFindings = [];
+    let currentFilter = 'all';
+
+    async function scanURL() {
+      const url = document.getElementById("urlInput").value.trim();
+      const headerDiv = document.getElementById("headersResult");
+      const cspDiv = document.getElementById("cspResult");
+      const methodDiv = document.getElementById("methodResult");
+      const serverDiv = document.getElementById("serverResult");
+      const vulnDiv = document.getElementById("vulnerabilityFindings");
+      const statsDiv = document.getElementById("vulnStats");
+      const areaSummaryDiv = document.getElementById("areaSummary");
+      const componentsGridDiv = document.getElementById("componentsGrid");
+      const filterButtonsDiv = document.getElementById("filterButtons");
+      const scannedUrlDiv = document.getElementById("scannedUrl");
+
+      // Show loading state
+      headerDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Scanning security headers...</div>';
+      cspDiv.innerHTML = '<div class="loading">Waiting for scan...</div>';
+      methodDiv.innerHTML = '<div class="loading">Waiting for scan...</div>';
+      serverDiv.innerHTML = '<div class="loading">Waiting for scan...</div>';
+      vulnDiv.innerHTML = '<div class="loading"><div class="spinner"></div>Performing comprehensive vulnerability assessment...</div>';
+      statsDiv.innerHTML = '';
+      areaSummaryDiv.innerHTML = '';
+      componentsGridDiv.innerHTML = '';
+      filterButtonsDiv.innerHTML = '';
+      scannedUrlDiv.innerHTML = `<strong>Scanning:</strong> ${url}`;
+
+      if (!url.startsWith("http")) {
+        headerDiv.innerHTML = "❌ Please enter a valid URL (include http/https).";
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/headers?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if (data.error) {
+          headerDiv.innerHTML = `❌ ${data.error}`;
+          return;
+        }
+
+        // Update scanned URL
+        scannedUrlDiv.innerHTML = `<strong>Scanned URL:</strong> ${data.scanned_url}`;
+
+        // Update security headers
+        const headers = data.headers;
+        let headerHTML = "";
+        importantHeaders.forEach(h => {
+          const found = headers[h.toLowerCase()];
+          if (found)
+            headerHTML += `<div class="header-item present">✅ <strong>${h}</strong> present.</div>`;
+          else
+            headerHTML += `<div class="header-item missing">⚠️ <strong>${h}</strong> missing.</div>`;
+        });
+        headerDiv.innerHTML = headerHTML;
+
+        // Update CSP
+        let cspHTML = "<h3>🧱 Content-Security-Policy:</h3>";
+        data.csp_warnings.forEach(msg => {
+          if (msg.startsWith("✅")) cspHTML += `<div class="header-item present">${msg}</div>`;
+          else cspHTML += `<div class="header-item warning">${msg}</div>`;
+        });
+        cspDiv.innerHTML = cspHTML;
+
+        // Update Methods
+        let methodHTML = "<h3>📡 HTTP Methods:</h3>";
+        for (let [method, enabled] of Object.entries(data.methods_enabled)) {
+          if (enabled)
+            methodHTML += `<div class="header-item warning">⚠️ ${method} method is enabled — risky.</div>`;
+          else
+            methodHTML += `<div class="header-item present">✅ ${method} method disabled.</div>`;
+        }
+        methodDiv.innerHTML = methodHTML;
+
+        // Update Server Exposure
+        let serverHTML = "<h3>🖥️ Server Information:</h3>";
+        data.server_exposure.forEach(msg => {
+          if (msg.startsWith("❌"))
+            serverHTML += `<div class="header-item missing">${msg}</div>`;
+          else if (msg.startsWith("⚠️"))
+            serverHTML += `<div class="header-item warning">${msg}</div>`;
+          else
+            serverHTML += `<div class="header-item present">${msg}</div>`;
+        });
+        serverDiv.innerHTML = serverHTML;
+
+        // Update Vulnerability Findings
+        currentFindings = data.vulnerability_findings;
+        updateVulnerabilityFindings(currentFindings);
+
+      } catch (err) {
+        headerDiv.innerHTML = `❌ Failed to fetch: ${err.message}`;
+      }
+    }
+
+    function updateVulnerabilityFindings(findings) {
+      const statsDiv = document.getElementById("vulnStats");
+      const areaSummaryDiv = document.getElementById("areaSummary");
+      const componentsGridDiv = document.getElementById("componentsGrid");
+      const filterButtonsDiv = document.getElementById("filterButtons");
+      const vulnDiv = document.getElementById("vulnerabilityFindings");
+
+      // Calculate statistics
+      const stats = {
+        critical: findings.filter(f => f.severity === 'critical').length,
+        high: findings.filter(f => f.severity === 'high').length,
+        medium: findings.filter(f => f.severity === 'medium').length,
+        low: findings.filter(f => f.severity === 'low').length,
+        info: findings.filter(f => f.severity === 'info').length
+      };
+
+      // Calculate area statistics and affected components
+      const areas = {};
+      const affectedHosts = new Set();
+      const components = {};
+      
+      findings.forEach(finding => {
+        const area = finding.area;
+        if (!areas[area]) {
+          areas[area] = { total: 0, critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+        }
+        areas[area].total++;
+        areas[area][finding.severity]++;
+        
+        // Add affected host
+        if (finding.affected_host) {
+          affectedHosts.add(finding.affected_host);
+        }
+        
+        // Track components
+        const component = finding.vulnerable_component || 'Unknown Component';
+        if (!components[component]) {
+          components[component] = { total: 0, critical: 0, high: 0, medium: 0, low: 0, info: 0 };
+        }
+        components[component].total++;
+        components[component][finding.severity]++;
+      });
+
+      // Update stats
+      statsDiv.innerHTML = `
+        <div class="stat-box">
+          <div class="stat-number critical-count">${stats.critical}</div>
+          <div>Critical</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number high-count">${stats.high}</div>
+          <div>High</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number medium-count">${stats.medium}</div>
+          <div>Medium</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number low-count">${stats.low}</div>
+          <div>Low</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--success);">${stats.info}</div>
+          <div>Info</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--accent);">${affectedHosts.size}</div>
+          <div>Affected Hosts</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: #7c3aed;">${Object.keys(components).length}</div>
+          <div>Components</div>
+        </div>
+      `;
+
+      // Update area summary
+      let areaHTML = '';
+      for (const [areaName, areaStats] of Object.entries(areas)) {
+        const areaFindings = findings.filter(f => f.area === areaName);
+        const areaHosts = [...new Set(areaFindings.map(f => f.affected_host).filter(Boolean))];
+        
+        areaHTML += `
+          <div class="area-card">
+            <div class="area-count">${areaStats.total}</div>
+            <div>${areaName}</div>
+            <small>
+              ${areaStats.critical > 0 ? `C:${areaStats.critical} ` : ''}
+              ${areaStats.high > 0 ? `H:${areaStats.high} ` : ''}
+              ${areaStats.medium > 0 ? `M:${areaStats.medium}` : ''}
+            </small>
+          </div>
+        `;
+      }
+      areaSummaryDiv.innerHTML = areaHTML;
+
+      // Update components grid
+      let componentsHTML = '<h3>🔧 Vulnerable Components</h3>';
+      for (const [componentName, componentStats] of Object.entries(components)) {
+        const componentFindings = findings.filter(f => f.vulnerable_component === componentName);
+        const severityClass = componentStats.critical > 0 ? 'critical-count' : 
+                             componentStats.high > 0 ? 'high-count' : 
+                             componentStats.medium > 0 ? 'medium-count' : 'low-count';
+        
+        componentsHTML += `
+          <div class="component-card">
+            <div class="stat-number ${severityClass}">${componentStats.total}</div>
+            <div><strong>${componentName}</strong></div>
+            <small>
+              ${componentStats.critical > 0 ? `C:${componentStats.critical} ` : ''}
+              ${componentStats.high > 0 ? `H:${componentStats.high} ` : ''}
+              ${componentStats.medium > 0 ? `M:${componentStats.medium}` : ''}
+            </small>
+          </div>
+        `;
+      }
+      componentsGridDiv.innerHTML = componentsHTML;
+
+      // Update filter buttons
+      const allAreas = ['all', ...Object.keys(areas)];
+      filterButtonsDiv.innerHTML = allAreas.map(area => `
+        <button class="filter-btn ${area === currentFilter ? 'active' : ''}" 
+                onclick="setFilter('${area}')">
+          ${area === 'all' ? 'All Areas' : area} 
+          ${area === 'all' ? `(${findings.length})` : `(${areas[area].total})`}
+        </button>
+      `).join('');
+
+      // Filter findings
+      const filteredFindings = currentFilter === 'all' 
+        ? findings 
+        : findings.filter(f => f.area === currentFilter);
+
+      // Update findings list
+      if (filteredFindings.length === 0) {
+        vulnDiv.innerHTML = '<div class="header-item present">✅ No vulnerabilities detected in this area.</div>';
+        return;
+      }
+
+      let vulnHTML = `
+        <h3>🔍 Detailed Findings (${filteredFindings.length} vulnerabilities):</h3>
+        <div style="margin-bottom: 15px; padding: 10px; background: var(--card); border-radius: 8px;">
+          <strong>Affected Hosts:</strong> ${[...affectedHosts].join(', ')}
+        </div>
+      `;
+      
+      filteredFindings.forEach(finding => {
+        const areaClass = finding.area.toLowerCase().replace(' ', '-');
+        vulnHTML += `
+          <div class="finding-item severity-${finding.severity}">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <span class="area-badge area-${areaClass}">${finding.area}</span>
+              <span class="host-badge">${finding.affected_host || 'Unknown Host'}</span>
+              <span class="component-badge">${finding.vulnerable_component || 'Unknown Component'}</span>
+            </div>
+            <strong>${finding.message}</strong><br>
+            <small>${finding.description}</small>
+            ${finding.evidence ? `
+              <div class="evidence">
+                <strong>Evidence:</strong> ${finding.evidence}
+              </div>
+            ` : ''}
+            <div class="recommendation">
+              <strong>Recommendation:</strong> ${finding.recommendation}
+            </div>
+            <div style="margin-top: 5px; font-size: 12px; color: var(--muted);">
+              Type: ${finding.type} | Severity: ${finding.severity}
+            </div>
+          </div>
+        `;
+      });
+
+      vulnDiv.innerHTML = vulnHTML;
+    }
+
+    function setFilter(area) {
+      currentFilter = area;
+      updateVulnerabilityFindings(currentFindings);
+    }
+
+    // Allow Enter key to trigger scan
+    document.getElementById('urlInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        scanURL();
+      }
+    });
+  </script>
+</body>
+</html>
