@@ -2,6 +2,7 @@
 # server.py — Advanced Security Header Evaluator
 # ==============================================
 from flask import Flask, request, jsonify, send_from_directory
+from server import app 
 from flask_cors import CORS
 import requests
 import os
