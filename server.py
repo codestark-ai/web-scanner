@@ -759,5 +759,4 @@ def detect_frameworks(content, headers, base_domain):
 
 if __name__ == "__main__":
     os.makedirs("static", exist_ok=True)
-    print("🚀 Running on http://127.0.0.1:5000")
-    app.run(debug=True)
+    app.run()
