@@ -10,7 +10,7 @@ class MissingSecurityHeadersScanner(BaseScanner):
         "Content-Security-Policy",
         "X-Content-Type-Options",
         "Strict-Transport-Security",
-        "X-Frame-Options",
+        "X-Frame-Options"
     ]
 
     def scan(self, url):
@@ -32,3 +32,4 @@ class MissingSecurityHeadersScanner(BaseScanner):
             }
 
         return None
+
