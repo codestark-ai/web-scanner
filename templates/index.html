@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Vulnerability Scanner</title>
+    <style>
+        body { font-family: Arial; background:#f4f6f8; padding:30px; }
+        .box { background:white; padding:20px; border-radius:8px; max-width:800px; margin:auto; }
+        input { width:80%; padding:10px; }
+        button { padding:10px 15px; }
+        .card { margin-top:15px; padding:15px; border-left:6px solid #999; background:#fff; }
+        .High { border-color:#e74c3c; }
+        .Medium { border-color:#f39c12; }
+        .Low { border-color:#3498db; }
+    </style>
+</head>
+<body>
+
+<div class="box">
+    <h2>Vulnerability Scanner</h2>
+
+    <form method="POST">
+        <input type="text" name="url" placeholder="https://example.com" required>
+        <button type="submit">Scan</button>
+    </form>
+
+    {% if target %}
+        <h3>Results for: {{ target }}</h3>
+    {% endif %}
+
+    {% if results %}
+        {% for r in results %}
+            <div class="card {{ r.severity }}">
+                <b>[{{ r.severity }}] {{ r.name }}</b><br>
+                OWASP: {{ r.owasp }}<br>
+                {{ r.details }}
+            </div>
+        {% endfor %}
+    {% elif target %}
+        <p>No vulnerabilities found 🎉</p>
+    {% endif %}
+</div>
+
+</body>
+</html>
