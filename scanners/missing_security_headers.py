@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 from base.base_scanner import BaseScanner
 from utils.request_handler import send_request
 
@@ -70,4 +69,3 @@ class MissingSecurityHeadersScanner(BaseScanner):
 
         return None
 
->>>>>>> e45baed0a6b96ca70b4f8c0a1652a2b46b788059
