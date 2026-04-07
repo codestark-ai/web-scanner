@@ -40,26 +40,67 @@
             backdrop-filter: blur(2px);
         }
 
-        /* logo area with hacker-red accent */
+        /* logo area – split layout: left small avatar + right brand */
         .logo-area {
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 1.8rem 1.5rem 1.5rem 1.5rem;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 1.5rem 1.2rem 1.2rem 1.2rem;
             border-bottom: 1px solid #2c1010;
+            background: #020203;
         }
 
-        .logo-area img {
-            height: 80px;
-            width: 500px;
-            max-width: 100%;
-            object-fit: contain;
-            border-radius: 32px;
-            border: 1.5px solid #b91c1c;
-            background: #000000;
-            padding: 8px 18px;
-            box-shadow: 0 0 12px rgba(185, 28, 28, 0.4);
-            filter: drop-shadow(0 0 4px #ff3a3a55);
+        .logo-avatar {
+            flex-shrink: 0;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid #ff3b3b;
+            box-shadow: 0 0 10px rgba(255, 40, 40, 0.6);
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+        .logo-avatar:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 14px #ff4444;
+        }
+        .logo-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .logo-text {
+            flex: 1;
+            text-align: right;
+        }
+        .logo-text .brand-icon {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ff3b3b;
+            letter-spacing: -0.5px;
+            background: #0a0000;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            border: 1px solid #b33;
+            display: inline-block;
+            font-family: monospace;
+            text-shadow: 0 0 3px #ff0000aa;
+        }
+        .logo-text .brand-icon i {
+            margin-right: 6px;
+        }
+        .logo-text .sub {
+            font-size: 0.6rem;
+            color: #b77c7c;
+            margin-top: 6px;
+            letter-spacing: 1px;
         }
 
         /* findings header */
@@ -509,10 +550,17 @@
     </style>
 </head>
 <body>
-    <!-- SIDEBAR – PERMANENT DARK/RED STYLE -->
+    <!-- SIDEBAR – PERMANENT DARK/RED STYLE WITH WATCH DOGS AVATAR -->
     <div class="sidebar">
+        <!-- redesigned logo-area with small avatar + brand -->
         <div class="logo-area">
-            <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/watch-dogs-2-logo.png" height="80px" width="500px" style="background-color: black;" alt="websec logo">
+            <div class="logo-avatar">
+                <img src="https://media4.giphy.com/avatars/WatchDogsUK/XH5IkoeDko6N/80h.jpg" alt="watchdogs avatar">
+            </div>
+            <div class="logo-text">
+                <div class="brand-icon"><i class="fas fa-skull-crossbones"></i> DEDSEC</div>
+                <div class="sub">// crimson node</div>
+            </div>
         </div>
 
         <div class="findings-header">
@@ -671,15 +719,25 @@
 
     <script>
         (function(){
-            console.log("%c⚡ VOIDSCANNER ACTIVE | RED/BLACK THEME", "color: #ff3b3b; font-size: 14px; font-family: monospace");
-            // optional: interactive badge
+            console.log("%c⚡ VOIDSCANNER ACTIVE | RED/BLACK THEME | WATCH DOGS AVATAR ACTIVE", "color: #ff3b3b; font-size: 14px; font-family: monospace");
+            // animated status dot
             const statusBadge = document.querySelector('.nav-right span');
             if(statusBadge) {
                 setInterval(() => {
                     const dot = document.querySelector('.nav-right i.fa-circle');
-                    if(dot) dot.style.opacity = '0.6';
+                    if(dot) dot.style.opacity = '0.5';
                     setTimeout(() => { if(dot) dot.style.opacity = '1'; }, 500);
-                }, 1200);
+                }, 1300);
+            }
+            // glitch effect on avatar hover (just visual)
+            const avatar = document.querySelector('.logo-avatar');
+            if(avatar) {
+                avatar.addEventListener('mouseenter', () => {
+                    avatar.style.filter = 'drop-shadow(0 0 4px #ff0000)';
+                });
+                avatar.addEventListener('mouseleave', () => {
+                    avatar.style.filter = 'none';
+                });
             }
         })();
     </script>
